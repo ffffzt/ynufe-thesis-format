@@ -54,7 +54,8 @@ ynufe-thesis-format/
 ├── references/
 │   ├── format-spec.md                完整格式细则（页面、字体、页码、目录、参考文献等）
 │   ├── figures-tables.md             图表命名与编号强制规则及校验方法
-│   └── word-implementation.md        Word / python-docx 落地要点与常见坑
+│   ├── word-implementation.md        Word / python-docx 落地要点与常见坑
+│   └── requirements-and-process.md   选题、开题报告、查重、提交、装袋与学术诚信
 ├── agents/openai.yaml                UI 元数据
 └── LICENSE
 ```
@@ -68,6 +69,7 @@ ynufe-thesis-format/
 - 页面：A4，上下 2.54cm、左右 3.17cm，页眉 1.5cm、页脚 1.75cm，全文 1.5 倍行距。
 - 页码分两段：声明、摘要、目录用大写罗马数字；正文起用阿拉伯数字并从 1 重新开始。
 - 图表编号必须按章重置，且图题在下、表题在上，题注末尾不加标点。
+- 正文要 10000 字以上（外语类 8000 单词以上），查重相似比须低于 20%，提交检测的文件按「学院+专业班级+学号+姓名+指导教师+题目」命名。
 
 ## 免责说明
 
