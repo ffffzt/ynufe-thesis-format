@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="640" viewBox="0 0 1280 640"
+     font-family="'Microsoft YaHei','PingFang SC','Noto Sans SC','Source Han Sans SC',sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="55%" stop-color="#F4F7FF"/>
+      <stop offset="100%" stop-color="#EDEBFF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#1E2A5A" flood-opacity="0.13"/>
+    </filter>
+    <filter id="shadowSm" x="-40%" y="-40%" width="180%" height="200%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#1E2A5A" flood-opacity="0.10"/>
+    </filter>
+
+    <g id="ic-page" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="3" width="14" height="18" rx="2.2"/>
+      <path d="M8.6 8h6.8M8.6 12h6.8M8.6 16h3.6"/>
+    </g>
+    <g id="ic-type" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.6 18.4 8 6.4l4.4 12"/>
+      <path d="M5.3 14.6h5.4"/>
+      <path d="M15.4 18.4v-6.2a2.6 2.6 0 0 1 5.2 0v6.2"/>
+      <path d="M15.4 15.6h5.2"/>
+    </g>
+    <g id="ic-header" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4" y="3" width="16" height="18" rx="2.2"/>
+      <path d="M4 8.4h16" stroke-dasharray="2.2 2.2"/>
+    </g>
+    <g id="ic-num" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <rect x="5" y="3" width="14" height="18" rx="2.2"/>
+      <path d="M10.6 9.4 12.4 8.4v7.2"/>
+    </g>
+    <g id="ic-abstract" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <rect x="4.5" y="3" width="15" height="18" rx="2.2"/>
+      <path d="M4.5 8.6h15" stroke-dasharray="1.6 1.6"/>
+      <path d="M9 12.4h6M8.2 16h8.6"/>
+    </g>
+    <g id="ic-toc" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 6.5h2.4M10 6.5h10M4 12h2.4M10 12h10M4 17.5h2.4M10 17.5h10"/>
+    </g>
+    <g id="ic-book" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 7.2C12 5.4 10.6 4 8.8 4H4.4v13.2h4.4c1.8 0 3.2 1.4 3.2 3.2"/>
+      <path d="M12 7.2C12 5.4 13.4 4 15.2 4h4.4v13.2h-4.4c-1.8 0-3.2 1.4-3.2 3.2"/>
+    </g>
+    <g id="ic-table" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3.4 5.6h17.2M3.4 17.4h17.2" stroke-width="2.4"/>
+      <path d="M3.4 11.5h17.2" stroke-width="1.7"/>
+    </g>
+    <g id="ic-chart" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4v16h16"/>
+      <path d="M7.8 16.4v-4.2M11.6 16.4V8.2M15.4 16.4v-6.4"/>
+    </g>
+    <g id="ic-check" fill="none" stroke="currentColor" stroke-width="1.9"
+       stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="8.6"/>
+      <path d="M8.1 12.3 11 15.2l5-5.6"/>
+    </g>
+    <g id="ic-print" fill="none" stroke="currentColor" stroke-width="1.8"
+       stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 10V4h10v6"/>
+      <rect x="4" y="10" width="16" height="7" rx="2"/>
+      <path d="M7 14.6h10V20H7z"/>
+    </g>
+  </defs>
+
+  <rect width="1280" height="640" fill="url(#bg)"/>
+  <circle cx="1180" cy="60" r="190" fill="#C7D2FE" opacity="0.30"/>
+  <circle cx="140" cy="626" r="170" fill="#DDD6FE" opacity="0.26"/>
+  <circle cx="620" cy="-70" r="150" fill="#BFDBFE" opacity="0.20"/>
+
+  <!-- 左侧：标题与功能 -->
+  <g transform="translate(72,96)">
+    <g transform="translate(0,10)">
+      <rect x="0" y="0" width="4" height="20" rx="2" fill="url(#accent)"/>
+      <text x="16" y="15" font-size="15" letter-spacing="1.6" fill="#4F46E5">
+        云南财经大学 · 本科毕业论文（设计）
+      </text>
+    </g>
+
+    <text x="0" y="94" font-size="62" font-weight="700" fill="#0F172A" letter-spacing="1">
+      毕业论文格式规范
+    </text>
+    <text x="2" y="136" font-size="20" fill="#64748B">
+      照校教发〔2024〕436 号排版，交付前一键自检
+    </text>
+
+    <g transform="translate(0,166)">
+      <g>
+        <rect x="0" y="0" width="176" height="46" rx="23" fill="#FFFFFF" filter="url(#shadowSm)"/>
+        <g transform="translate(14,11)" color="#2563EB">
+          <use href="#ic-check" width="24" height="24"/>
+        </g>
+        <text x="48" y="30" font-size="16" fill="#1E293B">格式自检</text>
+      </g>
+      <g transform="translate(192,0)">
+        <rect x="0" y="0" width="176" height="46" rx="23" fill="#FFFFFF" filter="url(#shadowSm)"/>
+        <g transform="translate(14,11)" color="#7C3AED">
+          <use href="#ic-chart" width="24" height="24"/>
+        </g>
+        <text x="48" y="30" font-size="16" fill="#1E293B">图表编号</text>
+      </g>
+      <g transform="translate(384,0)">
+        <rect x="0" y="0" width="208" height="46" rx="23" fill="#FFFFFF" filter="url(#shadowSm)"/>
+        <g transform="translate(14,11)" color="#0891B2">
+          <use href="#ic-abstract" width="24" height="24"/>
+        </g>
+        <text x="48" y="30" font-size="15" fill="#1E293B">目录 · 摘要 · 页码</text>
+      </g>
+    </g>
+
+    <g transform="translate(0,248)" color="#3B5BDB">
+      <g transform="translate(0,0)"><use href="#ic-type" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">字号字体</text></g>
+      <g transform="translate(72,0)"><use href="#ic-page" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">页面设置</text></g>
+      <g transform="translate(144,0)" color="#7C3AED"><use href="#ic-header" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">页眉</text></g>
+      <g transform="translate(216,0)" color="#7C3AED"><use href="#ic-num" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">页码分段</text></g>
+      <g transform="translate(288,0)" color="#0891B2"><use href="#ic-toc" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">目录</text></g>
+      <g transform="translate(360,0)" color="#0891B2"><use href="#ic-book" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">参考文献</text></g>
+      <g transform="translate(432,0)" color="#D97706"><use href="#ic-table" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">三线表</text></g>
+      <g transform="translate(504,0)" color="#D97706"><use href="#ic-print" width="30" height="30"/>
+        <text x="15" y="52" font-size="13" fill="#64748B" text-anchor="middle">打印装订</text></g>
+    </g>
+
+    <text x="0" y="378" font-size="15" fill="#475569">
+      自带 scripts/check_docx.py：14 类检查，条条对应 436 号文条款
+    </text>
+    <text x="0" y="406" font-size="14" fill="#94A3B8">
+      附 Word / OOXML 落地要点、图表编号强制规则、交付装袋清单
+    </text>
+  </g>
+
+  <!-- 右侧：排版示意页 -->
+  <g transform="translate(856,74)">
+    <rect x="0" y="0" width="352" height="470" rx="18" fill="#FFFFFF" filter="url(#shadow)"/>
+    <rect x="0.5" y="0.5" width="351" height="469" rx="17.5" fill="none" stroke="#E2E8F0"/>
+
+    <text x="176" y="34" font-size="11.5" fill="#94A3B8" text-anchor="middle">页眉：本页一级标题</text>
+    <path d="M40 44h272" stroke="#CBD5E1" stroke-width="1"/>
+
+    <rect x="40" y="66" width="150" height="15" rx="4" fill="#1E293B"/>
+    <rect x="40" y="96" width="272" height="9" rx="4.5" fill="#E2E8F0"/>
+    <rect x="40" y="113" width="272" height="9" rx="4.5" fill="#E2E8F0"/>
+    <rect x="40" y="130" width="196" height="9" rx="4.5" fill="#E2E8F0"/>
+
+    <rect x="40" y="156" width="96" height="11" rx="5.5" fill="#334155"/>
+    <rect x="40" y="178" width="272" height="9" rx="4.5" fill="#E2E8F0"/>
+    <rect x="40" y="195" width="238" height="9" rx="4.5" fill="#E2E8F0"/>
+
+    <text x="176" y="230" font-size="10.5" fill="#64748B" text-anchor="middle">表3-1 现状问题汇总表</text>
+    <path d="M40 238h272" stroke="#1E293B" stroke-width="3"/>
+    <path d="M40 260h272" stroke="#94A3B8" stroke-width="1"/>
+    <path d="M40 282h272" stroke="#1E293B" stroke-width="3"/>
+    <rect x="52" y="245" width="66" height="7" rx="3.5" fill="#E2E8F0"/>
+    <rect x="140" y="245" width="88" height="7" rx="3.5" fill="#E2E8F0"/>
+    <rect x="52" y="267" width="58" height="7" rx="3.5" fill="#E2E8F0"/>
+    <rect x="140" y="267" width="72" height="7" rx="3.5" fill="#E2E8F0"/>
+
+    <rect x="72" y="300" width="208" height="72" rx="10" fill="#EEF2FF" stroke="#C7D2FE"/>
+    <g transform="translate(150,315)" color="#6366F1">
+      <use href="#ic-chart" width="52" height="52"/>
+    </g>
+    <text x="176" y="392" font-size="10.5" fill="#64748B" text-anchor="middle">图3-1 组织架构图</text>
+
+    <text x="176" y="438" font-size="12" fill="#94A3B8" text-anchor="middle">1</text>
+  </g>
+
+  <!-- 标注：右对齐到示意页左侧，带引线 -->
+  <g font-size="12.5" fill="#475569">
+    <g>
+      <rect x="672" y="105" width="164" height="30" rx="15" fill="#FFFFFF" filter="url(#shadowSm)"/>
+      <text x="754" y="124.5" text-anchor="middle">上下 2.54 / 左右 3.17cm</text>
+      <path d="M840 120h16" stroke="#C7D2FE" stroke-width="1.5"/>
+    </g>
+    <g>
+      <rect x="672" y="165" width="164" height="30" rx="15" fill="#FFFFFF" filter="url(#shadowSm)"/>
+      <text x="754" y="184.5" text-anchor="middle">小4宋体 · 1.5 倍行距</text>
+      <path d="M840 180h16" stroke="#C7D2FE" stroke-width="1.5"/>
+    </g>
+    <g>
+      <rect x="672" y="420" width="164" height="30" rx="15" fill="#FFFFFF" filter="url(#shadowSm)"/>
+      <text x="754" y="439.5" text-anchor="middle">图题在图下</text>
+      <path d="M840 435h16" stroke="#C7D2FE" stroke-width="1.5"/>
+    </g>
+    <g>
+      <rect x="672" y="480" width="164" height="30" rx="15" fill="#FFFFFF" filter="url(#shadowSm)"/>
+      <text x="754" y="499.5" text-anchor="middle">前置罗马 · 正文从 1</text>
+      <path d="M840 495h16" stroke="#C7D2FE" stroke-width="1.5"/>
+    </g>
+  </g>
+
+  <text x="72" y="602" font-size="12.5" fill="#94A3B8">
+    非学校官方发布物 · 仅适用于云南财经大学本科毕业论文（设计）· 以导师与教务处要求为准
+  </text>
+</svg>

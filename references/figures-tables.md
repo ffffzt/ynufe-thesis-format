@@ -59,3 +59,19 @@
 | 题注末尾加句号 | 不加任何标点 |
 | 「详见图3-1」「见表3-1」 | 「如图3-1所示」「如表3-1所示」 |
 | 图题写在图上方 | 图题移到图下方 |
+
+## 八、自动核对
+
+`scripts/check_docx.py` 可直接核对本文件的可机检部分，改完稿跑一次即可：
+
+```bash
+python scripts/check_docx.py 论文.docx --only caption.format,caption.position,caption.sequence,caption.reference,caption.font
+```
+
+- `caption.format`：编号形式、编号与题名之间一个空格、末尾无标点
+- `caption.position`：图题上方是否为图片、表题下方是否为表格
+- `caption.sequence`：每章从 1 连续、无重复、无跳号、图与表各自独立
+- `caption.reference`：每个题注是否都有前置正文引用、有无悬空引用
+- `caption.font`：题注段落字号是否为 5 号（`sz=21`）
+
+脚本判不了的（说明性文字是否完整释义图表、坐标轴是否标单位、引用图是否在题名右上角标了文献号），仍需人工过一遍。
