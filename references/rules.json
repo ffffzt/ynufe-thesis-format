@@ -1,12 +1,27 @@
 {
-  "$comment": "机器可读规则表。所有数值的唯一来源：改数值只改这里，scripts/check_docx.py 读取本文件执行检查。clause 字段指向校教发〔2024〕436号条款。",
+  "$comment": "机器可读规则表。数值唯一来源：改数值只改这里，scripts/check_docx.py 读取本文件执行检查。每个 profile 一份口径：`value` 表示两种口径相同，`values` 表示按 profile 取不同值；`clause` / `clauses` 给出依据条款。",
+  "profile": {
+    "default": "zhonghua-cs-2023",
+    "available": {
+      "zhonghua-cs-2023": {
+        "title": "云南财经大学中华职业学院 计算机科学与技术（高职本科）毕业设计（论文）",
+        "issued": "2026-09（2023 级初稿）",
+        "effective": "2023 级（2027 届）起施行",
+        "source": "《计算机科学与技术（高职本科）专业毕业设计（论文）规范要求》（2023 级初稿）与《计算机科学与技术类毕业论文（设计）写作指导》，云南财经大学中华职业学院智慧技术教学部；上位文件：校教发〔2024〕436 号",
+        "note": "与 436 号不一致处按本专业规范执行；规范未规定或自相矛盾处见 references/zhonghua-cs-2023-spec.md 第 14 节"
+      },
+      "school-436": {
+        "title": "云南财经大学本科毕业论文（设计）",
+        "issued": "2024-12-31",
+        "effective": "自发布之日起施行，同时废止校教发〔2019〕256 号",
+        "source": "《云南财经大学本科生毕业论文（设计）管理规定（修订）》（校教发〔2024〕436 号）",
+        "note": "全校通用口径；中华职业学院计算机科学与技术（高职本科）另有更具体的专业规范"
+      }
+    }
+  },
   "meta": {
-    "title": "云南财经大学本科毕业论文（设计）格式规则",
-    "source": "《云南财经大学本科生毕业论文（设计）管理规定（修订）》（校教发〔2024〕436号）",
-    "issued": "2024-12-31",
-    "effective": "自发布之日起施行，同时废止校教发〔2019〕256号",
-    "status": "个人整理的重述，非学校官方发布物；与学校原文或教务处解释不一致时，一律以学校为准",
-    "scope": "仅云南财经大学本科毕业论文（设计）；不适用于其它学校、其它学位层次",
+    "status": "个人整理的重述，非学校或学院官方发布物；与原文、教研室或教务处解释不一致时，一律以后者为准",
+    "scope": "云南财经大学本科毕业论文（设计）；以中华职业学院计算机科学与技术（高职本科）专业规范为主口径，保留 436 号全校口径",
     "checker": "scripts/check_docx.py"
   },
   "units": {
@@ -27,7 +42,8 @@
     "专利文献类": "[序号] 申请者.专利名[P]，国名，专利文献种类，专利号，授权日期.",
     "技术标准类": "[序号] 发布单位.技术标准代号，技术标准名称[S]，出版者，出版日期.",
     "报纸文献类": "[序号] 著者.文献题名[N].报纸名.出版日期（版面次序）.",
-    "电子文献类": "[序号] 著者.文献题名[EB/OL].电子文献类型标示/载体类型标示.文献网址或出处，更新引用日期."
+    "电子文献类": "[序号] 著者.文献题名[EB/OL].电子文献类型标示/载体类型标示.文献网址或出处，更新引用日期.",
+    "$comment": "两种口径都执行 GB/T 7714—2015。计算机专业写作指导另给出简式示例（期刊：作者. 题名[J]. 刊名, 年, 卷(期): 起止页码.；专著：作者. 书名[M]. 出版地: 出版者, 出版年: 起止页码.），两种写法都可用，但同一篇论文内要统一。"
   },
   "rules": [
     {
@@ -41,12 +57,18 @@
     },
     {
       "id": "page.margin",
-      "label": "页边距：上下 2.54cm、左右 3.17cm",
+      "label": "页边距：上下 2.54cm、左右 2.5cm（436 为 3.17cm）",
       "severity": "fail",
-      "expect": "top=1440, bottom=1440, left=1800, right=1800 twips",
-      "value": { "top": 1440, "bottom": 1440, "left": 1800, "right": 1800 },
+      "expect": "上下 1440 twips、左右 1417 twips（436：left/right=1800）",
+      "values": {
+        "zhonghua-cs-2023": { "top": 1440, "bottom": 1440, "left": 1417, "right": 1417 },
+        "school-436": { "top": 1440, "bottom": 1440, "left": 1800, "right": 1800 }
+      },
       "tolerance": 20,
-      "clause": "第十五条（三）"
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章三（一）页面设置：上下各 2.54cm、左右各 2.5cm",
+        "school-436": "第十五条（三）"
+      }
     },
     {
       "id": "page.headerDistance",
@@ -68,19 +90,25 @@
     },
     {
       "id": "page.lineSpacing",
-      "label": "全文 1.5 倍行距",
+      "label": "全文 1.5 倍行距；本专业规范另要求正文段前段后 0 行",
       "severity": "fail",
-      "expect": "正文样式 spacing/@line=360 @lineRule=auto",
-      "value": { "line": 360, "lineRule": "auto" },
-      "clause": "第十五条（三）"
+      "expect": "正文样式 spacing/@line=360 @lineRule=auto；本专业规范另要求段前段后 0 行",
+      "values": {
+        "zhonghua-cs-2023": { "line": 360, "lineRule": "auto", "beforeAfterTwips": 0 },
+        "school-436": { "line": 360, "lineRule": "auto" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章三（三）段落格式：段前段后间距 0 行、1.5 倍行距",
+        "school-436": "第十五条（三）"
+      }
     },
     {
       "id": "page.numbering",
-      "label": "页码分段：前置部分大写罗马数字，正文起阿拉伯数字从 1 开始，封面封底不编页码",
+      "label": "页码分段：前置部分罗马数字，正文至附录阿拉伯数字从 1 开始，封面不编页码",
       "severity": "fail",
-      "expect": "封面节无页码域；前列各节 pgNumType/@fmt=upperRoman；正文节 @fmt=decimal @start=1",
+      "expect": "封面节无页码域；前置各节 pgNumType/@fmt=upperRoman；正文节 @fmt=decimal @start=1",
       "value": { "front": "upperRoman", "body": "decimal", "bodyStart": 1 },
-      "clause": "第十五条（三）"
+      "clause": "第十五条（三）；本专业规范 第七章三（五）页码编排"
     },
     {
       "id": "page.numberingCentered",
@@ -100,11 +128,27 @@
     },
     {
       "id": "header.content",
-      "label": "页眉居中，内容为本页一级标题，5 号宋体（STYLEREF \"标题 1\"）",
+      "label": "页眉居中：本专业规范为固定文字，436 为「本页一级标题」",
       "severity": "fail",
-      "expect": "正文节页眉含 STYLEREF \"标题 1\" 域，居中，宋体 sz=21",
-      "value": { "field": "STYLEREF \"标题 1\"", "font": "宋体", "sz": 21, "jc": "center" },
-      "clause": "第十五条（五）"
+      "expect": "本专业规范：各节页眉为固定文字并居中；436：正文节页眉含 STYLEREF \"标题 1\"",
+      "values": {
+        "zhonghua-cs-2023": {
+          "mode": "fixedText",
+          "text": "云南财经大学中华职业学院本科毕业设计（论文）",
+          "jc": "center"
+        },
+        "school-436": {
+          "mode": "styleRef",
+          "field": "STYLEREF \"标题 1\"",
+          "font": "宋体",
+          "sz": 21,
+          "jc": "center"
+        }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章三（一）：页眉统一标注「云南财经大学中华职业学院本科毕业设计（论文）」，页脚居中放置页码",
+        "school-436": "第十五条（五）"
+      }
     },
     {
       "id": "style.normal",
@@ -112,7 +156,7 @@
       "severity": "fail",
       "expect": "eastAsia=宋体, ascii=Times New Roman, sz=24",
       "value": { "eastAsia": "宋体", "ascii": "Times New Roman", "sz": 24 },
-      "clause": "第十五条（三）"
+      "clause": "第十五条（三）；本专业规范 表 7-2 正文行"
     },
     {
       "id": "style.normalIndent",
@@ -120,15 +164,21 @@
       "severity": "warn",
       "expect": "Normal 段落 ind/@firstLineChars=200",
       "value": { "firstLineChars": 200 },
-      "clause": "中文排版惯例；须与学校模板一致"
+      "clause": "本专业规范 第七章三（三）；须与学校模板一致"
     },
     {
       "id": "style.title",
-      "label": "论文题目：小 3 黑体；副标题 4 号黑体",
+      "label": "封面主标题：本专业规范为二号黑体加粗居中，436 为小 3 黑体",
       "severity": "warn",
-      "expect": "封面题目 sz=30 黑体；副标题 sz=28 黑体",
-      "value": { "titleSz": 30, "subtitleSz": 28, "font": "黑体" },
-      "clause": "第十五条（三）、第六条（二）"
+      "expect": "本专业规范：封面主标题黑体 sz=44 加粗居中；436：题目 sz=30 黑体、副标题 sz=28",
+      "values": {
+        "zhonghua-cs-2023": { "titleSz": 44, "font": "黑体", "bold": true, "jc": "center" },
+        "school-436": { "titleSz": 30, "subtitleSz": 28, "font": "黑体" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2 封面主标题：黑体二号加粗、居中",
+        "school-436": "第十五条（三）、第六条（二）"
+      }
     },
     {
       "id": "style.titleLength",
@@ -136,31 +186,47 @@
       "severity": "fail",
       "expect": "题目字符数 ≤ 25",
       "value": { "maxChars": 25 },
-      "clause": "第六条（二）"
+      "clause": "第六条（二）；本专业写作指导「不超过 25 个字、不使用标点符号」"
     },
     {
       "id": "heading.font",
-      "label": "正文标题字体：默认按 436 原文「小 4 加粗宋体」，部分学院/导师按黑体口径",
+      "label": "正文标题字体：本专业规范为黑体（三号/小三/四号/小四，加粗左对齐）",
       "severity": "fail",
-      "expect": "两种口径取其一，并与导师/学院模板一致",
-      "value": {
-        "default": "song",
-        "schemes": {
-          "song": {
-            "label": "436 原文口径：正文中标题用小 4 加粗宋体",
-            "font": "宋体",
-            "sz": { "1": 24, "2": 24, "3": 24, "4": 24 },
-            "bold": true
-          },
-          "black": {
-            "label": "黑体口径：一级、二级黑体 4 号；三级、四级黑体小 4",
-            "font": "黑体",
-            "sz": { "1": 28, "2": 28, "3": 24, "4": 24 },
-            "bold": false
+      "expect": "按 profile 的口径判定，并与导师/学院模板一致",
+      "values": {
+        "zhonghua-cs-2023": {
+          "default": "black-zhy",
+          "schemes": {
+            "black-zhy": {
+              "label": "本专业规范：一级黑体三号、二级黑体小三、三级黑体四号、四级黑体小四，均加粗左对齐",
+              "font": "黑体",
+              "sz": { "1": 32, "2": 30, "3": 28, "4": 24 },
+              "bold": true
+            }
+          }
+        },
+        "school-436": {
+          "default": "song",
+          "schemes": {
+            "song": {
+              "label": "436 原文口径：正文中标题用小 4 加粗宋体",
+              "font": "宋体",
+              "sz": { "1": 24, "2": 24, "3": 24, "4": 24 },
+              "bold": true
+            },
+            "black": {
+              "label": "黑体口径：一级、二级黑体 4 号；三级、四级黑体小 4",
+              "font": "黑体",
+              "sz": { "1": 28, "2": 28, "3": 24, "4": 24 },
+              "bold": false
+            }
           }
         }
       },
-      "clause": "第十五条（三）原文「正文中标题用小 4 加粗宋体」；同条（一）的「小 4 号黑体」是目录条目规定。两种口径并存，以导师或学院模板为准，见 references/format-spec.md §5.1"
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2：一级标题黑体三号、二级小三、三级四号、四级小四，加粗、左对齐",
+        "school-436": "第十五条（三）原文「正文中标题用小 4 加粗宋体」；同条（一）的「小 4 号黑体」是目录条目规定。两种口径并存，以导师或学院模板为准，见 references/format-spec.md §5.1"
+      }
     },
     {
       "id": "heading.outline",
@@ -168,25 +234,35 @@
       "severity": "fail",
       "expect": "heading N 样式 outlineLvl=N-1",
       "value": { "outlineLvl": { "1": 0, "2": 1, "3": 2, "4": 3 } },
-      "clause": "第十五条（四）（目录按二级标题编写，需要大纲级别支撑）"
+      "clause": "第十五条（四）；本专业规范要求目录含至三级标题"
     },
     {
       "id": "heading.numbering",
-      "label": "标题编号：一、 / （一） / 1 / （1）；全角括号；编号与标题直接相连（suff=nothing）",
+      "label": "标题编号：本专业规范未规定，436 为 一、/（一）/1/（1）",
       "severity": "fail",
-      "expect": "lvl1 中文数字 + '、'；lvl2 全角括号包中文数字；lvl3 阿拉伯数字无尾点；lvl4 全角括号包阿拉伯数字；suff=nothing",
-      "value": {
-        "lvl1": { "numFmt": "chineseCountingThousand", "lvlText": "%1、" },
-        "lvl2": { "numFmt": "chineseCountingThousand", "lvlText": "（%1）" },
-        "lvl3": { "numFmt": "decimal", "lvlText": "%1" },
-        "lvl4": { "numFmt": "decimal", "lvlText": "（%1）" },
-        "suff": "nothing"
+      "expect": "本专业规范：不强制；436：lvl1 中文数字+「、」，lvl2 全角括号包中文数字，lvl3 阿拉伯数字无尾点，lvl4 全角括号包阿拉伯数字，suff=nothing",
+      "values": {
+        "zhonghua-cs-2023": {
+          "enforce": false,
+          "note": "本专业规范只给四级标题的字体字号，未规定编号形式。规范自身目录用「第一章 / 一、 / （一）」，写作指导正文示例用「一、 / （一） / 1 / （1）」。以指导教师模板为准，脚本此项跳过。"
+        },
+        "school-436": {
+          "enforce": true,
+          "lvl1": { "numFmt": "chineseCountingThousand", "lvlText": "%1、" },
+          "lvl2": { "numFmt": "chineseCountingThousand", "lvlText": "（%1）" },
+          "lvl3": { "numFmt": "decimal", "lvlText": "%1" },
+          "lvl4": { "numFmt": "decimal", "lvlText": "（%1）" },
+          "suff": "nothing"
+        }
       },
-      "clause": "第十五条（四）"
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章三（二）只给字体字号（见 zhonghua-cs-2023-spec.md 第 14 节第 3 条）",
+        "school-436": "第十五条（四）"
+      }
     },
     {
       "id": "heading.blankLine",
-      "label": "一级、二级标题上下各空一行",
+      "label": "一级、二级标题上下各空一行（436 口径；本专业规范未另行规定）",
       "severity": "warn",
       "expect": "heading 1/2 的 spacing before 与 after 各不小于一行高（≥ 360 twips 或前后各有一个空段落）",
       "value": { "minBeforeAfterTwips": 360 },
@@ -194,11 +270,17 @@
     },
     {
       "id": "abstract.heading",
-      "label": "「摘　要」题头：居中、小 2 加粗宋体、两字间一个全角空格、隔行后写正文",
+      "label": "「摘　要」题头：本专业规范为黑体三号，436 为小 2 加粗宋体",
       "severity": "fail",
-      "expect": "题头文本 '摘　要'，jc=center，b，sz=36，宋体",
-      "value": { "text": "摘　要", "jc": "center", "sz": 36, "bold": true, "font": "宋体" },
-      "clause": "第十五条（二）"
+      "expect": "题头文本 '摘　要'，居中、加粗；本专业规范 黑体 sz=32，436 宋体 sz=36",
+      "values": {
+        "zhonghua-cs-2023": { "text": "摘　要", "jc": "center", "sz": 32, "bold": true, "font": "黑体" },
+        "school-436": { "text": "摘　要", "jc": "center", "sz": 36, "bold": true, "font": "宋体" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2 中英文摘要标题：黑体三号、居中、加粗",
+        "school-436": "第十五条（二）"
+      }
     },
     {
       "id": "abstract.noTitle",
@@ -206,7 +288,7 @@
       "severity": "fail",
       "expect": "摘要节内不出现论文题目文本",
       "value": { "forbidTitle": true },
-      "clause": "第十五条（二）"
+      "clause": "第十五条（二）；本专业规范未另行规定，沿用 436"
     },
     {
       "id": "abstract.length",
@@ -214,78 +296,121 @@
       "severity": "fail",
       "expect": "中文字符数 300—500",
       "value": { "min": 300, "max": 500 },
-      "clause": "第六条（三）"
+      "clause": "第六条（三）；本专业规范 第七章二（一）"
     },
     {
       "id": "keywords.count",
-      "label": "关键词 3—5 个，按外延层次从大到小",
+      "label": "关键词 3—5 个，本专业规范用分号分隔（436 用全角空格）",
       "severity": "fail",
-      "expect": "关键词 3—5 个，词条之间一个全角空格",
-      "value": { "min": 3, "max": 5, "separator": "　" },
-      "clause": "第六条（三）、第十五条（二）"
+      "expect": "关键词 3—5 个，词条之间的分隔符与 profile 一致",
+      "values": {
+        "zhonghua-cs-2023": { "min": 3, "max": 5, "separator": "；" },
+        "school-436": { "min": 3, "max": 5, "separator": "　" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章二（一）：关键词 3—5 个，之间用分号分隔；写作指导「中间用分号隔开」",
+        "school-436": "第六条（三）、第十五条（二）"
+      }
     },
     {
       "id": "keywords.label",
-      "label": "「关键词」三字 4 号黑体，内容小 4 宋体",
+      "label": "「关键词」三字 4 号黑体，内容小 4 宋体（436 口径）",
       "severity": "warn",
       "expect": "标签 sz=28 黑体；内容 sz=24 宋体",
-      "value": { "labelSz": 28, "labelFont": "黑体", "contentSz": 24, "contentFont": "宋体" },
-      "clause": "第十五条（二）"
+      "values": {
+        "zhonghua-cs-2023": { "specified": false, "note": "本专业规范未规定「关键词」标签的字体字号，脚本此项跳过，按正文或导师模板执行" },
+        "school-436": { "labelSz": 28, "labelFont": "黑体", "contentSz": 24, "contentFont": "宋体" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2 未列「关键词」标签（见 zhonghua-cs-2023-spec.md 第 14 节）",
+        "school-436": "第十五条（二）"
+      }
     },
     {
       "id": "abstract.english",
       "label": "外文摘要与关键词 Times New Roman 小 4，「Abstract」「Keywords」加粗",
       "severity": "fail",
-      "expect": "外文摘要正文与关键词行的字体为 Times New Roman（未显式设置时继承正文小 4）；「Keywords」所在 run 加粗",
+      "expect": "外文摘要正文与关键词行字体为 Times New Roman（未显式设置时继承正文小 4）；「Keywords」所在 run 加粗",
       "value": { "font": "Times New Roman", "sz": 24, "boldWords": ["Keywords"] },
       "clause": "第十五条（二）"
     },
     {
       "id": "abstract.englishHeading",
-      "label": "「Abstract」题头：436 未规定其字号，建议与「摘　要」题头保持一致",
+      "label": "「Abstract」题头：与「摘　要」题头保持一致",
       "severity": "warn",
       "expect": "Abstract 题头居中、加粗，字号与「摘　要」题头一致",
       "value": { "sameSizeAsChineseAbstract": true, "jc": "center", "bold": true },
-      "clause": "第十五条（二）（仅规定题头文字与摘要正文字体，未规定外文题头字号）"
+      "clause": "第十五条（二）（未规定外文题头字号）；本专业规范 表 7-2 把中英文摘要标题并列"
     },
     {
       "id": "toc.heading",
-      "label": "「目　录」题头：居中、3 号加粗宋体、两字间一个全角空格、隔行后列内容",
+      "label": "「目　录」题头：本专业规范为三号黑体，436 为 3 号加粗宋体",
       "severity": "fail",
-      "expect": "题头文本 '目　录'，jc=center，b，sz=32，宋体",
-      "value": { "text": "目　录", "jc": "center", "sz": 32, "bold": true, "font": "宋体" },
-      "clause": "第十五条（一）"
+      "expect": "题头文本 '目　录'，居中、加粗",
+      "values": {
+        "zhonghua-cs-2023": { "text": "目　录", "jc": "center", "sz": 32, "bold": true, "font": "黑体" },
+        "school-436": { "text": "目　录", "jc": "center", "sz": 32, "bold": true, "font": "宋体" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章二（二）：目录标题「目　录」用三号黑体居中",
+        "school-436": "第十五条（一）"
+      }
     },
     {
       "id": "toc.levels",
-      "label": "目录按二级标题编写（TOC 域 \\o \"1-2\"）",
+      "label": "目录层级：本专业规范含至三级标题，436 为两级",
       "severity": "fail",
-      "expect": "TOC 域代码含 \\o \"1-2\"；条目只含一级、二级",
-      "value": { "outlineRange": "1-2" },
-      "clause": "第六条（四）、第十五条（一）"
+      "expect": "TOC 域 \\o 范围与 profile 一致",
+      "values": {
+        "zhonghua-cs-2023": { "outlineRange": "1-3" },
+        "school-436": { "outlineRange": "1-2" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章二（二）：目录应自动生成，包含至三级标题，标明页码",
+        "school-436": "第六条（四）、第十五条（一）"
+      }
     },
     {
       "id": "toc.entries",
-      "label": "目录条目需含声明、中英文摘要、正文一/二级标题、附录、参考文献、致谢，且标页码",
+      "label": "目录条目须覆盖前置部分与正文章节，并标注页码",
       "severity": "fail",
-      "expect": "条目覆盖：原创性及知识产权声明、摘　要、Abstract、正文一级与二级标题、参考文献、致谢；每条带页码",
-      "value": { "required": ["声明", "摘　要", "Abstract", "参考文献", "致谢"] },
-      "clause": "第十五条（一）"
+      "expect": "条目覆盖 profile 要求的各部分；每条带页码",
+      "values": {
+        "zhonghua-cs-2023": {
+          "required": ["摘　要", "Abstract", "参考文献", "人工智能工具使用声明", "致谢"]
+        },
+        "school-436": {
+          "required": ["声明", "摘　要", "Abstract", "参考文献", "致谢"]
+        }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章一（论文结构）＋第七章二（二）",
+        "school-436": "第十五条（一）"
+      }
     },
     {
       "id": "toc.fonts",
-      "label": "目录一级题序及标题小 4 黑体，其余小 4 宋体",
+      "label": "目录条目字体：436 为一级小 4 黑体、其余小 4 宋体",
       "severity": "fail",
       "expect": "TOC1 条目 eastAsia=黑体 sz=24；TOC2 条目 eastAsia=宋体 sz=24",
-      "value": { "toc1Font": "黑体", "toc2Font": "宋体", "sz": 24 },
-      "clause": "第十五条（一）"
+      "values": {
+        "zhonghua-cs-2023": { "specified": false, "note": "本专业规范只规定「目　录」题头用三号黑体，未规定目录条目字体，脚本此项跳过" },
+        "school-436": { "toc1Font": "黑体", "toc2Font": "宋体", "sz": 24 }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2 未列目录条目（见 zhonghua-cs-2023-spec.md 第 14 节）",
+        "school-436": "第十五条（一）"
+      }
     },
     {
       "id": "toc.dotLeader",
       "label": "目录点线：右对齐制表位，位置等于正文右边界",
       "severity": "warn",
-      "expect": "右对齐制表位 leader=dot，pos=正文可用宽度（左右边距 3.17cm 时约 8306 twips）",
-      "value": { "tab": { "val": "right", "leader": "dot", "pos": 8306 } },
+      "expect": "右对齐制表位 leader=dot，pos=正文可用宽度（左右边距 2.5cm 时约 9071 twips）",
+      "values": {
+        "zhonghua-cs-2023": { "tab": { "val": "right", "leader": "dot", "pos": 9071 } },
+        "school-436": { "tab": { "val": "right", "leader": "dot", "pos": 8306 } }
+      },
       "clause": "版式一致性要求，见 references/word-implementation.md 坑 7"
     },
     {
@@ -293,8 +418,11 @@
       "label": "图题/表题：图X-Y、表X-Y，半角横杠，图/表与编号不空格，编号与题名空一格，末尾不加标点",
       "severity": "fail",
       "expect": "^图\\d+-\\d+\\s\\S 或 ^表\\d+-\\d+\\s\\S，末尾无标点",
-      "value": { "pattern": "^(图|表)\\d+-\\d+\\s", "forbidTrailingPunctuation": "。．，；：、,;:" },
-      "clause": "第十五条（九）（十）；每章重新编号为用户项目约定，见 references/figures-tables.md"
+      "value": {
+        "pattern": "^(图|表)\\d+-\\d+\\s",
+        "forbidTrailingPunctuation": "。．，；：、,;:"
+      },
+      "clause": "第十五条（九）（十）；本专业规范 第七章三（四）：图题在图下方居中「图X-Y  图名」，表题在表上方居中「表X-Y  表名」"
     },
     {
       "id": "caption.position",
@@ -302,7 +430,7 @@
       "severity": "fail",
       "expect": "图题的前一个块是图片；表题的后一个块是表格",
       "value": { "figure": "after-image", "table": "before-table" },
-      "clause": "第十五条（九）（十）"
+      "clause": "第十五条（九）（十）；本专业规范 第七章三（四）"
     },
     {
       "id": "caption.sequence",
@@ -310,7 +438,7 @@
       "severity": "fail",
       "expect": "同章内序号 1,2,3… 连续，无重复、无跳号、无跨章累加",
       "value": { "scope": "perChapter", "independentSeries": true },
-      "clause": "第十五条（九）（十）"
+      "clause": "第十五条（九）（十）；本专业规范 第七章三（四）「按章节编排」"
     },
     {
       "id": "caption.reference",
@@ -322,34 +450,70 @@
     },
     {
       "id": "caption.font",
-      "label": "图号图名、表序表名 5 号宋体",
+      "label": "题注字体：本专业规范 图题宋体五号居中、表题黑体小四加粗居中；436 统一 5 号宋体",
       "severity": "fail",
-      "expect": "题注 sz=21 宋体",
-      "value": { "sz": 21, "font": "宋体" },
-      "clause": "第十五条（九）（十）"
+      "expect": "按 profile 取 figure / table 各自的字号与字体",
+      "values": {
+        "zhonghua-cs-2023": {
+          "figure": { "sz": 21, "font": "宋体", "jc": "center" },
+          "table": { "sz": 24, "font": "黑体", "bold": true, "jc": "center" }
+        },
+        "school-436": {
+          "figure": { "sz": 21, "font": "宋体" },
+          "table": { "sz": 21, "font": "宋体" }
+        }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2：表格标题 黑体小四加粗居中；图表题注 宋体五号居中。两行口径不同，按原文执行",
+        "school-436": "第十五条（九）（十）"
+      }
     },
     {
-      "id": "table.threeLine",
-      "label": "三线表：无左右边线，上下边线 1.5 磅，其余 0.5 磅",
+      "id": "table.borders",
+      "label": "表格边框：本专业规范为完整边框，436 为三线表",
       "severity": "fail",
-      "expect": "表格无 left/right 边框；上下边框 sz=12（1.5 磅）；内部横线 sz=4（0.5 磅）",
-      "value": { "outerHalfPoints": 12, "innerHalfPoints": 4, "noVertical": true },
-      "clause": "第十五条（九）"
+      "expect": "本专业规范：top/bottom/left/right/insideH/insideV 六条边框均为实线；436：无左右边线、上下 1.5 磅、内线 0.5 磅",
+      "values": {
+        "zhonghua-cs-2023": {
+          "mode": "fullGrid",
+          "requiredSides": ["top", "bottom", "left", "right", "insideH", "insideV"]
+        },
+        "school-436": {
+          "mode": "threeLine",
+          "outerHalfPoints": 12,
+          "innerHalfPoints": 4,
+          "noVertical": true
+        }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章三（四）：表格采用完整边框（本规范附录表格样式）",
+        "school-436": "第十五条（九）"
+      }
     },
     {
       "id": "table.font",
-      "label": "表内文字及说明小 5 号宋体",
+      "label": "表内文字：本专业规范为五号宋体居中，436 为小 5 号宋体",
       "severity": "warn",
-      "expect": "表格内文字 sz=18 宋体",
-      "value": { "sz": 18, "font": "宋体" },
-      "clause": "第十五条（九）"
+      "expect": "表格内文字按 profile 取字号",
+      "values": {
+        "zhonghua-cs-2023": { "sz": 21, "font": "宋体", "jc": "center" },
+        "school-436": { "sz": 18, "font": "宋体" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 表 7-2 表格内容：宋体五号、居中",
+        "school-436": "第十五条（九）"
+      }
     },
     {
       "id": "note.footnotePerPage",
-      "label": "注释用脚注，数字加圆圈，按页分别编号",
+      "label": "注释用脚注，数字加圆圈，按页分别编号（436 口径；本专业规范未提及）",
       "severity": "fail",
       "expect": "存在 footnotes.xml；脚注编号格式为圆圈数字（①②…）且每页重新编号",
-      "value": { "style": "footnote", "numFmt": "decimalEnclosedCircle", "restart": "eachPage" },
+      "value": {
+        "style": "footnote",
+        "numFmt": "decimalEnclosedCircle",
+        "restart": "eachPage"
+      },
       "clause": "第六条（六）、第十五条（六）"
     },
     {
@@ -358,15 +522,40 @@
       "severity": "fail",
       "expect": "非网络文献条目 ≥ 20",
       "value": { "min": 20, "excludeNetwork": true },
-      "clause": "第六条（八）"
+      "clause": "第六条（八）；本专业规范 第七章二（四）「原则上不少于 20 篇」；综述类不少于 25 篇"
+    },
+    {
+      "id": "reference.composition",
+      "label": "参考文献构成：期刊论文与学术著作占比、近 5 年文献比例（本专业规范）",
+      "severity": "warn",
+      "expect": "期刊论文和学术著作占比 ≥60%；近 5 年文献占比 ≥50%（综述类另需 ≥25 篇、近 5 年 ≥60%、外文 ≥5 篇）",
+      "values": {
+        "zhonghua-cs-2023": {
+          "journalOrBookMinPercent": 60,
+          "recentWithinYears": 5,
+          "recentMinPercent": 50,
+          "reviewPaper": { "min": 25, "recentMinPercent": 60, "foreignMin": 5 }
+        },
+        "school-436": { "specified": false, "note": "436 号未规定文献构成比例，此项跳过" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章二（四）；规范 第六章四（综述类）",
+        "school-436": "第六条（八）"
+      }
     },
     {
       "id": "reference.recent",
-      "label": "须有近两年文献",
+      "label": "文献时效性：本专业规范要求近 5 年 ≥50%，436 要求有近两年文献",
       "severity": "warn",
-      "expect": "至少 1 条出版年 ≥ 当前年份 − 1（人工确认）",
-      "value": { "recentWithinYears": 2 },
-      "clause": "第六条（八）"
+      "expect": "按 profile 判断时效性（人工确认）",
+      "values": {
+        "zhonghua-cs-2023": { "recentWithinYears": 5, "minPercent": 50 },
+        "school-436": { "recentWithinYears": 2 }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章二（四）",
+        "school-436": "第六条（八）"
+      }
     },
     {
       "id": "reference.numbers",
@@ -378,35 +567,73 @@
     },
     {
       "id": "body.length",
-      "label": "正文 10000 字以上（外语类 8000 单词以上）",
+      "label": "正文 10000 字以上（外语类 8000 单词以上；综述类 12000 字以上）",
       "severity": "fail",
       "expect": "正文中文字符数 ≥ 10000",
       "value": { "minChineseChars": 10000 },
-      "clause": "第六条（五）"
+      "clause": "第六条（五）；本专业写作指导「全文字数不少于 10000 字」；规范 第六章四 综述类 ≥12000 字"
+    },
+    {
+      "id": "ai.disclosure",
+      "label": "人工智能工具使用声明（本专业规范强制专节）",
+      "severity": "fail",
+      "expect": "本专业规范：须设「人工智能工具使用声明」专节，声明工具名称、版本、使用环节与大致使用比例，本人签字；436 无此要求",
+      "values": {
+        "zhonghua-cs-2023": {
+          "required": true,
+          "sectionTitle": "人工智能工具使用声明",
+          "mustDeclare": ["工具名称", "版本", "使用环节", "使用比例"],
+          "signed": true,
+          "allowedPosition": "正文末尾、参考文献之前（规范 第三章四）；结构条款与写作指导另有说法，先问指导教师"
+        },
+        "school-436": { "required": false, "note": "436 号未要求 AI 工具使用声明，此项跳过" }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第三章四（披露机制与声明）、第七章一（论文结构）",
+        "school-436": "无对应条款"
+      }
     },
     {
       "id": "binding.order",
-      "label": "装订顺序：封面→声明→中文摘要→外文摘要→目录→正文→附录→参考文献→致谢→封底，各起新页，左侧装订",
+      "label": "装订顺序",
       "severity": "fail",
-      "expect": "文档中各部分按上述顺序出现；相邻部分之间有分页或分节",
-      "value": { "order": ["封面", "原创性及知识产权声明", "摘要", "Abstract", "目录", "正文", "参考文献", "致谢"] },
-      "clause": "第二十五条"
+      "expect": "文档各部分按 profile 的 order 出现；相邻部分之间有分页或分节",
+      "values": {
+        "zhonghua-cs-2023": {
+          "order": ["封面", "中文摘要", "英文摘要", "目录", "正文", "参考文献", "人工智能工具使用声明", "致谢"]
+        },
+        "school-436": {
+          "order": ["封面", "原创性及知识产权声明", "摘要", "Abstract", "目录", "正文", "参考文献", "致谢"]
+        }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第七章一；写作指导把「附录（可选）」排在最后",
+        "school-436": "第二十五条"
+      }
     },
     {
       "id": "plagiarism.threshold",
-      "label": "查重相似比须低于 20%",
+      "label": "查重相似比（本专业规范用维普）",
       "severity": "info",
-      "expect": "最终稿相似比 < 20%；≥20% 不能参加答辩",
-      "value": { "max": 20 },
-      "clause": "第十六条"
+      "expect": "本专业规范：≤20% 通过；20%—30% 三日内修改重检；30%—50% 推迟一学期答辩；>50% 认定严重学术不端。436：相似比 <20%",
+      "values": {
+        "zhonghua-cs-2023": { "system": "维普", "passMax": 20, "reviseMax": 30, "deferMax": 50 },
+        "school-436": { "max": 20 }
+      },
+      "clauses": {
+        "zhonghua-cs-2023": "规范 第八章二（查重结果分级处理表）",
+        "school-436": "第十六条"
+      }
     },
     {
       "id": "plagiarism.filename",
-      "label": "送检文件命名：学院+专业班级+学号+论文作者姓名+指导教师姓名+题目",
+      "label": "送检文件命名：学院+专业班级+学号+论文作者姓名+指导教师姓名+题目（436 口径）",
       "severity": "info",
       "expect": "文件名按该顺序拼接",
-      "value": { "order": ["学院", "专业班级", "学号", "论文作者姓名", "指导教师姓名", "题目"] },
-      "clause": "第十六条（一）"
+      "value": {
+        "order": ["学院", "专业班级", "学号", "论文作者姓名", "指导教师姓名", "题目"]
+      },
+      "clause": "第十六条（一）；本专业规范未另行规定"
     }
   ]
 }

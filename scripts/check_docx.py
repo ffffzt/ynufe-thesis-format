@@ -2,14 +2,23 @@
 """云南财经大学本科毕业论文格式自检（离线、只读）。
 
 用法：
-    python scripts/check_docx.py <论文.docx> [--json] [--only rule.id,rule.id] [--list-rules]
+    python scripts/check_docx.py <论文.docx> [--profile PROFILE] [--json]
+                                 [--only rule.id,rule.id] [--list-rules] [--list-profiles]
 
-数值唯一来源为 references/rules.json。检查项覆盖页面设置、页码分段、页眉、
-样式、标题编号、题注、目录、摘要、参考文献、装订顺序等可机检内容。
-退出码：0 表示无 FAIL，1 表示存在 FAIL。
+数值唯一来源为 references/rules.json，每个 profile 一份口径：
+
+* ``zhonghua-cs-2023``（默认）—— 云南财经大学中华职业学院 计算机科学与技术
+  （高职本科）2023 级 / 2027 届专业规范；
+* ``school-436`` —— 校教发〔2024〕436 号全校口径。
+
+检查项覆盖页面设置、页码分段、页眉、样式、标题编号、题注、目录、摘要、参考文献、
+AI 工具使用声明、装订顺序等可机检内容。退出码：0 表示无 FAIL，1 表示存在 FAIL。
 
 检查读取 OOXML 与样式定义，不做渲染。页眉串节、目录点线、图表跨页断开等版式问题
 仍须导出 PDF 转图逐页核对；脚本结论与渲染结果冲突时，以渲染结果为准。
+
+少数规则只作参考、不做机检（如字号依赖样式继承、须肉眼判断的项），--list-rules
+仍会列出它们。
 """
 
 from __future__ import annotations
@@ -19,6 +28,7 @@ import json
 import re
 import sys
 import zipfile
+from datetime import date
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
@@ -390,9 +400,11 @@ def check_sections(doc: Docx, rep: Report, rules):
         bad = [f"{key}={attr(mar, key)}" for key in ("top", "bottom", "left", "right")
                if attr(mar, key) is None or abs(int(attr(mar, key)) - margin[key]) > tol]
         if bad:
-            rep.fail("page.margin", "偏差 " + ", ".join(bad) + "（应 top/bottom=1440、left/right=1800 twips）", where)
+            rep.fail("page.margin",
+                     "偏差 " + ", ".join(bad)
+                     + f"（应 top/bottom={margin['top']}、left/right={margin['left']} twips）", where)
         else:
-            rep.ok("page.margin", "上下 1440、左右 1800 twips", where)
+            rep.ok("page.margin", f"上下 {margin['top']}、左右 {margin['left']} twips", where)
         hv, fv = attr(mar, "header"), attr(mar, "footer")
         if hv is None or abs(int(hv) - header_cm) > tol:
             rep.fail("page.headerDistance", f"header={hv} twips（应 851 ≈1.5cm）", where)
@@ -446,6 +458,9 @@ def check_page_numbers(doc: Docx, rep: Report, rules):
 
 def check_headers(doc: Docx, rep: Report, rules):
     body_at = body_section_index(doc)
+    spec = rules["header.content"]["value"]
+    mode = spec.get("mode", "styleRef")
+    want_jc = spec.get("jc", "center")
     for sec in doc.sections:
         sp = sec["sectPr"]
         where = f"第 {sec['index']} 节"
@@ -462,25 +477,36 @@ def check_headers(doc: Docx, rep: Report, rules):
             if part is None:
                 continue
             texts.append("".join(t.text or "" for t in part.iter(w("t"))).strip())
-            if any('STYLEREF "标题 1"' in (i.text or "") for i in part.iter(w("instrText"))):
+            field = spec.get("field")
+            if field and any(field in (i.text or "") for i in part.iter(w("instrText"))):
                 has_field = True
             for p in part.iter(w("p")):
                 ppr = p.find(w("pPr"))
                 jc = ppr.find(w("jc")) if ppr is not None else None
-                if jc is not None and attr(jc, "val") != "center":
+                if jc is not None and attr(jc, "val") != want_jc:
                     deviations.add(f"对齐={attr(jc, 'val')}")
                 for r in p.iter(w("r")):
                     rpr = r.find(w("rPr"))
                     sz = rpr.find(w("sz")) if rpr is not None else None
-                    if sz is not None and attr(sz, "val") != "21":
+                    if sz is not None and spec.get("sz") and attr(sz, "val") != str(spec["sz"]):
                         deviations.add(f"sz={attr(sz, 'val')}")
-        if sec["index"] >= body_at:
+        if sec["index"] < body_at:
+            continue
+        if mode == "fixedText":
+            want_text = spec.get("text", "")
+            hit = [t for t in texts if want_text and want_text in t]
+            if hit:
+                rep.ok("header.content", f"页眉为固定文字「{want_text}」", where)
+            else:
+                rep.fail("header.content",
+                         f"正文节页眉应统一标注「{want_text}」，实际内容={texts}", where)
+        else:
             if has_field:
                 rep.ok("header.content", "页眉用 STYLEREF 引用本页一级标题", where)
             else:
                 rep.fail("header.content", f'正文节页眉没有 STYLEREF "标题 1" 域，内容={texts}', where)
-            if deviations:
-                rep.warn("header.content", "页眉格式偏差：" + "、".join(sorted(deviations)), where)
+        if deviations:
+            rep.warn("header.content", "页眉格式偏差：" + "、".join(sorted(deviations)), where)
 
 
 def check_styles(doc: Docx, rep: Report, rules):
@@ -500,10 +526,18 @@ def check_styles(doc: Docx, rep: Report, rules):
             rep.warn("style.normal", f"西文字体 ascii={fonts.get('ascii')}（应 Times New Roman）", "Normal")
         pprops = doc.resolve_ppr(normal.get(w("styleId")))
         line, rule = pprops.get("line"), pprops.get("lineRule")
-        if line == "360" and rule in (None, "auto"):
-            rep.ok("page.lineSpacing", "line=360 lineRule=auto（1.5 倍）", "Normal")
+        want_line = rules["page.lineSpacing"]["value"]
+        if line == str(want_line["line"]) and rule in (None, want_line["lineRule"]):
+            rep.ok("page.lineSpacing", f"line={line} lineRule={rule}（1.5 倍）", "Normal")
         else:
-            rep.fail("page.lineSpacing", f"line={line} lineRule={rule}（应 360/auto）", "Normal")
+            rep.fail("page.lineSpacing",
+                     f"line={line} lineRule={rule}（应 {want_line['line']}/{want_line['lineRule']}）", "Normal")
+        if want_line.get("beforeAfterTwips") is not None:
+            gaps = {k: pprops.get(k) for k in ("before", "after")}
+            nonzero = {k: v for k, v in gaps.items() if v not in (None, "0")}
+            if nonzero:
+                rep.warn("page.lineSpacing",
+                         f"正文段前段后={nonzero} twips（本专业规范要求段前段后 0 行）", "Normal")
         if pprops.get("firstLineChars") == "200":
             rep.ok("style.normalIndent", "首行缩进 2 字符", "Normal")
         else:
@@ -518,11 +552,13 @@ def check_styles(doc: Docx, rep: Report, rules):
         props = doc.resolve_rpr(st.get(w("styleId")))
         font = props.get("fonts", {}).get("eastAsia")
         size = props.get("sz")
+        bold = bool(props.get("bold"))
         matched = [
             name for name, scheme in schemes["schemes"].items()
             if font == scheme["font"] and size == scheme["sz"][str(level)]
+            and bold == bool(scheme.get("bold"))
         ]
-        detail = f"{font} sz={size}"
+        detail = f"{font} sz={size}" + ("加粗" if bold else "未加粗")
         if active in matched:
             rep.ok("heading.font", f"{detail}（{schemes['schemes'][active]['label']}）", f"heading {level}")
         elif matched:
@@ -538,7 +574,7 @@ def check_styles(doc: Docx, rep: Report, rules):
                 f"{name}={scheme['font']} sz={scheme['sz'][str(level)]}"
                 for name, scheme in schemes["schemes"].items()
             )
-            rep.fail("heading.font", f"{detail}（两种口径都不符：{expect}）", f"heading {level}")
+            rep.fail("heading.font", f"{detail}（与口径不符：{expect}）", f"heading {level}")
         pprops = doc.resolve_ppr(st.get(w("styleId")))
         if pprops.get("outlineLvl") == level - 1:
             rep.ok("heading.outline", f"outlineLvl={level - 1}", f"heading {level}")
@@ -548,7 +584,10 @@ def check_styles(doc: Docx, rep: Report, rules):
 
 def check_heading_numbering(doc: Docx, rep: Report, rules):
     want = rules["heading.numbering"]["value"]
-    for level in (1, 2, 3, 4):
+    enforced = want.get("enforce", True)
+    if not enforced:
+        rep.info("heading.numbering", want.get("note", "本 profile 未强制标题编号形式，跳过"), "")
+    for level in (1, 2, 3, 4) if enforced else ():
         st = doc.style_by_name(f"heading {level}")
         if st is None:
             continue
@@ -631,13 +670,16 @@ def check_front_matter(doc: Docx, rep: Report, rules):
         if para_jc(blk) != spec["jc"]:
             problems.append(f"对齐={para_jc(blk)}（应 center）")
         if props.get("sz") != spec["sz"]:
-            problems.append(f"sz={props.get('sz')}（应 {spec['sz']} 即小 2）")
+            problems.append(f"sz={props.get('sz')}（应 {spec['sz']}）")
+        if spec.get("font") and props.get("eastAsia") and props.get("eastAsia") != spec["font"]:
+            problems.append(f"字体={props.get('eastAsia')}（应 {spec['font']}）")
         if not props.get("bold"):
             problems.append("未加粗")
         if problems:
             rep.fail("abstract.heading", "；".join(problems), "摘要题头")
         else:
-            rep.ok("abstract.heading", "小 2 加粗宋体、居中、两字间全角空格", "摘要题头")
+            rep.ok("abstract.heading",
+                   f"{spec.get('font', '')} sz={spec['sz']}、加粗、居中、两字间全角空格", "摘要题头")
     if blk is not None:
         chunks = []
         for j in range(index + 1, len(doc.blocks)):
@@ -659,25 +701,34 @@ def check_front_matter(doc: Docx, rep: Report, rules):
     if kw is None:
         rep.fail("keywords.count", "未找到关键词段落", "")
     else:
+        sep = rules["keywords.count"]["value"].get("separator", "；")
         text = re.sub(r"^关键词[：:　\s]*", "", kw["text"].strip())
-        items = [x for x in re.split(r"[\s　]+", text) if x]
+        items = [x.strip() for x in re.split(re.escape(sep), text) if x.strip()]
+        if len(items) < 2:
+            loose = [x for x in re.split(r"[；;、,，\s　]+", text) if x]
+            if len(loose) > len(items):
+                rep.warn("keywords.count", f"关键词之间应使用「{sep}」分隔（当前用的是其它符号）", "关键词")
+                items = loose
         low, high = rules["keywords.count"]["value"]["min"], rules["keywords.count"]["value"]["max"]
         if low <= len(items) <= high:
-            rep.ok("keywords.count", f"{len(items)} 个：{'　'.join(items)}", "关键词")
+            rep.ok("keywords.count", f"{len(items)} 个：{sep.join(items)}", "关键词")
         else:
-            rep.fail("keywords.count", f"{len(items)} 个（应 {low}—{high}）：{'　'.join(items)}", "关键词")
+            rep.fail("keywords.count", f"{len(items)} 个（应 {low}—{high}）：{sep.join(items)}", "关键词")
         want = rules["keywords.label"]["value"]
-        for item in run_items(kw):
-            if "关键词" in item["text"]:
-                if item.get("sz") != want["labelSz"] or item.get("eastAsia") != want["labelFont"]:
-                    rep.fail("keywords.label",
-                             f"「关键词」标签 eastAsia={item.get('eastAsia')} sz={item.get('sz')}"
-                             f"（应 {want['labelFont']} sz={want['labelSz']} 即 4 号黑体）", "关键词")
-                else:
-                    rep.ok("keywords.label", "「关键词」4 号黑体", "关键词")
-            elif item["text"].strip() and item.get("sz") not in (None, want["contentSz"]):
-                rep.warn("keywords.label",
-                         f"关键词内容 sz={item.get('sz')}（应 {want['contentSz']} 小 4 宋体，或直接继承正文）", "关键词")
+        if not want.get("specified", True):
+            rep.info("keywords.label", want.get("note", "本 profile 未规定关键词标签字体，跳过"), "关键词")
+        else:
+            for item in run_items(kw):
+                if "关键词" in item["text"]:
+                    if item.get("sz") != want["labelSz"] or item.get("eastAsia") != want["labelFont"]:
+                        rep.fail("keywords.label",
+                                 f"「关键词」标签 eastAsia={item.get('eastAsia')} sz={item.get('sz')}"
+                                 f"（应 {want['labelFont']} sz={want['labelSz']} 即 4 号黑体）", "关键词")
+                    else:
+                        rep.ok("keywords.label", "「关键词」4 号黑体", "关键词")
+                elif item["text"].strip() and item.get("sz") not in (None, want["contentSz"]):
+                    rep.warn("keywords.label",
+                             f"关键词内容 sz={item.get('sz')}（应 {want['contentSz']} 小 4 宋体，或直接继承正文）", "关键词")
     _, abstract_en = find_para(doc, lambda t: t.strip() == "Abstract")
     if abstract_en is None:
         rep.warn("abstract.englishHeading", "未找到 Abstract 题头", "")
@@ -755,12 +806,15 @@ def check_toc(doc: Docx, rep: Report, rules):
             problems.append(f"对齐={para_jc(blk)}（应 center）")
         if props.get("sz") != spec["sz"]:
             problems.append(f"sz={props.get('sz')}（应 {spec['sz']} 即 3 号）")
+        if spec.get("font") and props.get("eastAsia") and props.get("eastAsia") != spec["font"]:
+            problems.append(f"字体={props.get('eastAsia')}（应 {spec['font']}）")
         if not props.get("bold"):
             problems.append("未加粗")
         if problems:
             rep.fail("toc.heading", "；".join(problems), "目录题头")
         else:
-            rep.ok("toc.heading", "3 号加粗宋体、居中、两字间全角空格", "目录题头")
+            rep.ok("toc.heading",
+                   f"{spec.get('font', '')} {spec['sz']}、加粗、居中、两字间全角空格", "目录题头")
     fields = [i.text or "" for i in doc.doc.iter(w("instrText")) if "TOC" in (i.text or "")]
     if not fields:
         rep.warn("toc.levels", "未发现 TOC 域（可能是静态目录）", "")
@@ -783,14 +837,16 @@ def check_toc(doc: Docx, rep: Report, rules):
             rep.ok("toc.entries", f"{len(entries)} 条，覆盖前置部分与正文章节", "目录")
     toc1, toc2 = doc.style_by_name("toc 1"), doc.style_by_name("toc 2")
     want = rules["toc.fonts"]["value"]
-    if toc1 is not None:
+    if not want.get("specified", True):
+        rep.info("toc.fonts", want.get("note", "本 profile 未规定目录条目字体，跳过"), "目录")
+    elif toc1 is not None:
         props = doc.resolve_rpr(toc1.get(w("styleId")))
         got = props.get("fonts", {}).get("eastAsia")
         if got == want["toc1Font"]:
             rep.ok("toc.fonts", f"一级条目 {got} sz={props.get('sz')}", "toc 1")
         else:
             rep.fail("toc.fonts", f"一级条目字体={got}（应 {want['toc1Font']}）", "toc 1")
-    if toc2 is not None:
+    if toc2 is not None and want.get("specified", True):
         props = doc.resolve_rpr(toc2.get(w("styleId")))
         got = props.get("fonts", {}).get("eastAsia") or "宋体"
         if got == want["toc2Font"]:
@@ -816,9 +872,17 @@ def check_captions(doc: Docx, rep: Report, rules):
             rep.fail("caption.format", f"编号与题名之间应空一格：{text}", f"块 {i}")
         if text[-1] in TRAILING_PUNCT:
             rep.fail("caption.format", f"题注末尾不应有标点：{text}", f"块 {i}")
+        spec = cap_font.get("figure" if kind == "图" else "table", {})
         props = effective_run_props(doc, blk)
-        if props.get("sz") != cap_font["sz"]:
-            rep.fail("caption.font", f"题注 sz={props.get('sz')}（应 {cap_font['sz']} 即 5 号）：{text}", f"块 {i}")
+        if props.get("sz") != spec.get("sz"):
+            rep.fail("caption.font",
+                     f"{kind}题 sz={props.get('sz')}（应 {spec.get('sz')}）：{text}", f"块 {i}")
+        caption_font = props.get("eastAsia")
+        if spec.get("font") and caption_font and caption_font != spec["font"]:
+            rep.fail("caption.font",
+                     f"{kind}题字体={caption_font}（应 {spec['font']}）：{text}", f"块 {i}")
+        if spec.get("bold") and not props.get("bold"):
+            rep.fail("caption.font", f"{kind}题未加粗（应 {spec['font']} 加粗）：{text}", f"块 {i}")
         if kind == "图":
             prev = doc.blocks[i - 1] if i > 0 else None
             if prev is None or not (prev["kind"] == "p" and prev["has_image"]):
@@ -858,7 +922,8 @@ def check_captions(doc: Docx, rep: Report, rules):
 
 
 def check_tables(doc: Docx, rep: Report, rules):
-    want = rules["table.threeLine"]["value"]
+    want = rules["table.borders"]["value"]
+    mode = want.get("mode", "threeLine")
     total, clean = 0, 0
     for i, blk in enumerate(doc.blocks):
         if blk["kind"] != "tbl":
@@ -867,27 +932,34 @@ def check_tables(doc: Docx, rep: Report, rules):
         tblpr = blk["el"].find(w("tblPr"))
         borders = tblpr.find(w("tblBorders")) if tblpr is not None else None
         if borders is None:
-            rep.warn("table.threeLine", "表格未显式声明边框，依赖样式或行内边框，需渲染确认", f"表块 {i}")
+            rep.warn("table.borders", "表格未显式声明边框，依赖样式或行内边框，需渲染确认", f"表块 {i}")
             continue
         issues = []
-        for side in ("left", "right"):
-            el = borders.find(w(side))
-            if el is not None and attr(el, "val") not in (None, "none", "nil"):
-                issues.append(f"存在 {side} 边线")
-        for side in ("top", "bottom"):
-            el = borders.find(w(side))
-            sz = attr(el, "sz") if el is not None else None
-            if sz is None or int(sz) != want["outerHalfPoints"]:
-                issues.append(f"{side} 边线 sz={sz}（应 {want['outerHalfPoints']} 即 1.5 磅）")
-        inside = borders.find(w("insideH"))
-        if inside is not None and attr(inside, "sz") and int(attr(inside, "sz")) != want["innerHalfPoints"]:
-            issues.append(f"内横线 sz={attr(inside, 'sz')}（应 {want['innerHalfPoints']} 即 0.5 磅）")
+        if mode == "fullGrid":
+            for side in want.get("requiredSides", []):
+                el = borders.find(w(side))
+                if el is None or attr(el, "val") in (None, "none", "nil"):
+                    issues.append(f"缺少 {side} 边线（本专业规范要求完整边框）")
+        else:
+            for side in ("left", "right"):
+                el = borders.find(w(side))
+                if el is not None and attr(el, "val") not in (None, "none", "nil"):
+                    issues.append(f"存在 {side} 边线")
+            for side in ("top", "bottom"):
+                el = borders.find(w(side))
+                sz = attr(el, "sz") if el is not None else None
+                if sz is None or int(sz) != want["outerHalfPoints"]:
+                    issues.append(f"{side} 边线 sz={sz}（应 {want['outerHalfPoints']} 即 1.5 磅）")
+            inside = borders.find(w("insideH"))
+            if inside is not None and attr(inside, "sz") and int(attr(inside, "sz")) != want["innerHalfPoints"]:
+                issues.append(f"内横线 sz={attr(inside, 'sz')}（应 {want['innerHalfPoints']} 即 0.5 磅）")
         if issues:
-            rep.warn("table.threeLine", "；".join(issues), f"表块 {i}")
+            rep.warn("table.borders", "；".join(issues), f"表块 {i}")
         else:
             clean += 1
     if total and clean == total:
-        rep.ok("table.threeLine", f"{total} 个表格均为三线表设置", "")
+        label = "完整边框" if mode == "fullGrid" else "三线表"
+        rep.ok("table.borders", f"{total} 个表格符合{label}设置", "")
 
 
 def check_footnotes(doc: Docx, rep: Report, rules):
@@ -952,7 +1024,51 @@ def check_references(doc: Docx, rep: Report, rules):
         rep.ok("reference.numbers", f"[1]—[{len(nums)}] 连续", "参考文献")
     years = [int(m.group(0)) for e in entries for m in re.finditer(r"(?:19|20)\d{2}", e)]
     if years:
-        rep.info("reference.recent", f"最晚出版年 {max(years)}，请人工确认存在近两年文献", "参考文献")
+        rec = rules["reference.recent"]["value"]
+        span = rec.get("recentWithinYears", 2)
+        rep.info("reference.recent",
+                 f"最晚出版年 {max(years)}，请人工确认近 {span} 年文献占比是否达标", "参考文献")
+    comp = rules["reference.composition"]["value"]
+    if entries and comp.get("specified", True):
+        jm = [e for e in entries if "[J]" in e or "[M]" in e]
+        pct = round(100 * len(jm) / len(entries))
+        low_pct = comp.get("journalOrBookMinPercent", 60)
+        if pct >= low_pct:
+            rep.ok("reference.composition",
+                   f"期刊论文与学术著作 {len(jm)}/{len(entries)} 条（{pct}%）达标", "参考文献")
+        else:
+            rep.warn("reference.composition",
+                     f"期刊论文与学术著作 {len(jm)}/{len(entries)} 条（{pct}%），低于 {low_pct}%", "参考文献")
+        span = comp.get("recentWithinYears", 5)
+        horizon = date.today().year - span + 1
+        recent = [y for y in years if y >= horizon]
+        rep.info("reference.composition",
+                 f"近 {span} 年（≥{horizon}）文献约 {len(recent)}/{len(years)} 条，须人工确认",
+                 "参考文献")
+    elif entries:
+        rep.info("reference.composition", comp.get("note", "本 profile 未规定文献构成比例，跳过"), "参考文献")
+
+
+def check_ai_disclosure(doc: Docx, rep: Report, rules):
+    want = rules["ai.disclosure"]["value"]
+    if not want.get("required"):
+        rep.info("ai.disclosure", want.get("note", "本 profile 不要求 AI 工具使用声明，跳过"), "")
+        return
+    title = want.get("sectionTitle", "人工智能工具使用声明")
+    hits = [i for i, b in enumerate(doc.blocks)
+            if b["kind"] == "p" and title in norm(b["text"])]
+    if not hits:
+        rep.fail("ai.disclosure", f"未找到「{title}」专节（本专业规范要求必设，放在正文末尾或参考文献之后）", "")
+        return
+    idx = hits[0]
+    joined = "".join(b["text"] for b in doc.blocks[idx:idx + 40] if b["kind"] == "p")
+    missing = [k for k in want.get("mustDeclare", []) if k not in joined]
+    if missing:
+        rep.warn("ai.disclosure", f"声明中未见：{'、'.join(missing)}（须人工确认）", title)
+    else:
+        rep.ok("ai.disclosure", f"已设「{title}」专节，含 {len(want.get('mustDeclare', []))} 项要素", title)
+    if want.get("signed") and "签字" not in joined and "签名" not in joined:
+        rep.warn("ai.disclosure", "声明末尾未见签字位置（本专业规范要求本人签字确认）", title)
 
 
 def check_body_length(doc: Docx, rep: Report, rules):
@@ -981,12 +1097,16 @@ def check_body_length(doc: Docx, rep: Report, rules):
 def check_binding_order(doc: Docx, rep: Report, rules):
     order = rules["binding.order"]["value"]["order"]
     matchers = {
-        "封面": lambda t: "毕业论文（设计）" in t or "本科毕业论文" in t,
+        "封面": lambda t: ("毕业设计" in t or "毕业论文" in t) and "本科" in t,
         "原创性及知识产权声明": lambda t: "原创性" in t and "声明" in t,
+        "声明": lambda t: "原创性" in t and "声明" in t,
         "摘要": lambda t: norm(t) == "摘要",
+        "中文摘要": lambda t: norm(t) == "摘要",
         "Abstract": lambda t: t.strip() == "Abstract",
+        "英文摘要": lambda t: t.strip() == "Abstract",
         "目录": lambda t: norm(t) == "目录",
         "参考文献": lambda t: t.strip() == "参考文献",
+        "人工智能工具使用声明": lambda t: "人工智能工具使用声明" in norm(t),
         "致谢": lambda t: t.strip() == "致谢",
     }
     positions = {}
@@ -999,7 +1119,7 @@ def check_binding_order(doc: Docx, rep: Report, rules):
         for name in order:
             if name not in positions and name in matchers and matchers[name](text):
                 positions[name] = i
-        if "正文" not in positions and doc.heading_level(blk["style"]) == 1:
+        if "正文" in order and "正文" not in positions and doc.heading_level(blk["style"]) == 1:
             positions["正文"] = i
         if len(positions) == len(order):
             break
@@ -1030,15 +1150,33 @@ CHECKS = [
     check_tables,
     check_footnotes,
     check_references,
+    check_ai_disclosure,
     check_body_length,
     check_binding_order,
 ]
 
 
-def load_rules():
+def resolve_profile(data, name=None):
+    profiles = data.get("profile", {})
+    available = profiles.get("available", {})
+    active = name or profiles.get("default")
+    if active not in available:
+        raise SystemExit(f"未知 profile：{active}（可选：{'、'.join(available)}）")
+    return active, available[active]
+
+
+def load_rules(profile=None):
     path = Path(__file__).resolve().parent.parent / "references" / "rules.json"
     data = json.loads(path.read_text(encoding="utf-8"))
-    return data, {rule["id"]: rule for rule in data["rules"]}
+    active, info = resolve_profile(data, profile)
+    table = {}
+    for rule in data["rules"]:
+        resolved = dict(rule)
+        if "values" in rule:
+            resolved["value"] = rule["values"][active]
+        resolved["clause"] = rule.get("clauses", {}).get(active) or rule.get("clause", "")
+        table[rule["id"]] = resolved
+    return data, table, active, info
 
 
 def main(argv=None):
@@ -1048,19 +1186,32 @@ def main(argv=None):
     parser.add_argument("--json", action="store_true", help="输出 JSON")
     parser.add_argument("--only", help="只输出指定规则，逗号分隔规则 id")
     parser.add_argument("--list-rules", action="store_true", help="列出全部规则 id")
-    parser.add_argument("--heading-scheme", choices=("song", "black"),
-                        help="正文标题字体口径：song=436 原文（小 4 加粗宋体，默认）；black=黑体口径")
+    parser.add_argument("--list-profiles", action="store_true", help="列出可用规则口径（profile）")
+    parser.add_argument("--profile", help="规则口径：zhonghua-cs-2023（默认）或 school-436")
+    parser.add_argument("--heading-scheme",
+                        help="正文标题字体口径（仅 school-436）：song=436 原文（小 4 加粗宋体）；black=黑体口径")
     args = parser.parse_args(argv)
 
-    data, table = load_rules()
+    data, table, active, info = load_rules(args.profile)
+    if args.list_profiles:
+        default = data["profile"]["default"]
+        for name, meta in data["profile"]["available"].items():
+            mark = "*" if name == default else " "
+            print(f"{mark} {name:<18} {meta['title']}  ({meta['issued']})")
+        return 0
     if args.list_rules:
+        print(f"# 规则口径 {active} —— {info['title']}")
         for rule in data["rules"]:
-            print(f"{rule['id']:<26} [{rule['severity']:<4}] {rule['label']}  ({rule['clause']})")
+            resolved = table[rule["id"]]
+            print(f"{rule['id']:<26} [{rule['severity']:<4}] {resolved['label']}  ({resolved['clause']})")
         return 0
     if not args.path:
         parser.error("缺少 .docx 路径")
 
     if args.heading_scheme:
+        schemes = table["heading.font"]["value"].get("schemes", {})
+        if args.heading_scheme not in schemes:
+            parser.error(f"profile {active} 没有 {args.heading_scheme} 口径，可选：{'、'.join(schemes)}")
         table["heading.font"]["value"]["active"] = args.heading_scheme
 
     path = Path(args.path)
@@ -1084,14 +1235,16 @@ def main(argv=None):
     if args.json:
         print(json.dumps({
             "file": str(path),
-            "source": data["meta"]["source"],
+            "profile": active,
+            "source": info["source"],
             "summary": {"fail": len(fails), "warn": len(warns), "pass": len(passes), "info": len(infos)},
             "findings": findings,
         }, ensure_ascii=False, indent=2))
         return 1 if fails else 0
 
     print(f"检查文件：{path.name}")
-    print(f"规则来源：{data['meta']['source']}")
+    print(f"规则口径：{active} —— {info['title']}")
+    print(f"规则来源：{info['source']}")
     print(f"声明：{data['meta']['status']}\n")
     if fails:
         print("=== 必须修改（FAIL）===")
